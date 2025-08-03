@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Play, Download, Filter, Search } from 'lucide-react';
+import { LogOut, Play, Download, Filter, Search, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DetectionTable } from './DetectionTable';
 
 interface DashboardProps {
@@ -87,10 +88,41 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
               AI Monitoring System
             </Badge>
           </div>
-          <Button variant="outline" onClick={onLogout} size="sm">
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Users className="w-4 h-4 mr-2" />
+                  Meet the Team
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Meet the Team</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <img 
+                    src="/lovable-uploads/008f4f4c-1edd-41cd-b2e2-3da2deab584e.png" 
+                    alt="Team Photo" 
+                    className="w-full rounded-lg"
+                  />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Team Members:</h4>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• Milan paul sunny</li>
+                      <li>• MuhammedZahran</li>
+                      <li>• Sreelekshmi</li>
+                      <li>• Adarsh TJ</li>
+                    </ul>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={onLogout} size="sm">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
