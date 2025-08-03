@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, Play, Download, Filter, Search, Users } from 'lucide-react';
+import { LogOut, Play, Download, Filter, Search, Users, Calendar as CalendarIcon, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { DetectionTable } from './DetectionTable';
 
 interface DashboardProps {
@@ -13,8 +18,7 @@ interface DashboardProps {
 
 export const Dashboard = ({ onLogout }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Sample data for the litter detection system
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const [detectionData, setDetectionData] = useState([
     {
       id: 1,
@@ -75,6 +79,16 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       )
     );
   };
+
+  const filteredByDate = selectedDate 
+    ? detectionData.filter(item => {
+        const itemDate = new Date(item.timestamp);
+        const selected = new Date(selectedDate);
+        return itemDate.toDateString() === selected.toDateString();
+      })
+    : detectionData;
+
+  const reviewedItems = detectionData.filter(item => item.status === 'verified' || item.status === 'reviewed');
 
   const stats = {
     totalDetections: detectionData.length,
@@ -171,37 +185,120 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
           </Card>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detection Log</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 mb-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by registration number or location..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+        {/* Main Content with Tabs */}
+        <Tabs defaultValue="detections" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="detections">Live Detections</TabsTrigger>
+            <TabsTrigger value="reviews">Review History</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="detections" className="space-y-6">
+            {/* Search and Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Detection Log</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6 flex-wrap">
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by registration number or location..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[200px] justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP") : <span>Filter by date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {selectedDate && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedDate(undefined)}
+                      size="sm"
+                    >
+                      Clear Date
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filters
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
                 </div>
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </div>
-            
-            <DetectionTable data={detectionData} searchTerm={searchTerm} onStatusUpdate={handleStatusUpdate} />
-          </CardContent>
-        </Card>
+                
+                <DetectionTable data={filteredByDate} searchTerm={searchTerm} onStatusUpdate={handleStatusUpdate} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Review History ({reviewedItems.length} items)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-muted-foreground">Accepted Reviews</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-success">
+                        {reviewedItems.filter(item => item.status === 'verified').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-muted-foreground">Rejected Reviews</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-destructive">
+                        {reviewedItems.filter(item => item.status === 'reviewed').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <DetectionTable 
+                  data={reviewedItems} 
+                  searchTerm="" 
+                  onStatusUpdate={handleStatusUpdate} 
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
