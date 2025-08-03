@@ -13,9 +13,9 @@ interface DashboardProps {
 
 export const Dashboard = ({ onLogout }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-
+  
   // Sample data for the litter detection system
-  const detectionData = [
+  const [detectionData, setDetectionData] = useState([
     {
       id: 1,
       timestamp: '2024-08-02 14:32:15',
@@ -23,8 +23,8 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       location: 'Main St & 5th Ave',
       confidence: 0.89,
       clipUrl: '/api/clips/clip-001.mp4',
-      status: 'verified' as const,
-      severity: 'medium' as const
+      status: 'verified' as 'verified' | 'pending' | 'reviewed',
+      severity: 'medium' as 'low' | 'medium' | 'high'
     },
     {
       id: 2,
@@ -33,8 +33,8 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       location: 'Park Avenue',
       confidence: 0.94,
       clipUrl: '/api/clips/clip-002.mp4',
-      status: 'pending' as const,
-      severity: 'high' as const
+      status: 'pending' as 'verified' | 'pending' | 'reviewed',
+      severity: 'high' as 'low' | 'medium' | 'high'
     },
     {
       id: 3,
@@ -43,8 +43,8 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       location: 'Downtown Plaza',
       confidence: 0.76,
       clipUrl: '/api/clips/clip-003.mp4',
-      status: 'reviewed' as const,
-      severity: 'low' as const
+      status: 'reviewed' as 'verified' | 'pending' | 'reviewed',
+      severity: 'low' as 'low' | 'medium' | 'high'
     },
     {
       id: 4,
@@ -53,8 +53,8 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       location: 'Shopping Center',
       confidence: 0.91,
       clipUrl: '/api/clips/clip-004.mp4',
-      status: 'verified' as const,
-      severity: 'high' as const
+      status: 'verified' as 'verified' | 'pending' | 'reviewed',
+      severity: 'high' as 'low' | 'medium' | 'high'
     },
     {
       id: 5,
@@ -63,10 +63,18 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       location: 'Residential Area',
       confidence: 0.83,
       clipUrl: '/api/clips/clip-005.mp4',
-      status: 'pending' as const,
-      severity: 'medium' as const
+      status: 'pending' as 'verified' | 'pending' | 'reviewed',
+      severity: 'medium' as 'low' | 'medium' | 'high'
     }
-  ];
+  ]);
+
+  const handleStatusUpdate = (id: number, newStatus: 'verified' | 'pending' | 'reviewed') => {
+    setDetectionData(prevData => 
+      prevData.map(item => 
+        item.id === id ? { ...item, status: newStatus } : item
+      )
+    );
+  };
 
   const stats = {
     totalDetections: detectionData.length,
@@ -191,7 +199,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
               </Button>
             </div>
             
-            <DetectionTable data={detectionData} searchTerm={searchTerm} />
+            <DetectionTable data={detectionData} searchTerm={searchTerm} onStatusUpdate={handleStatusUpdate} />
           </CardContent>
         </Card>
       </div>

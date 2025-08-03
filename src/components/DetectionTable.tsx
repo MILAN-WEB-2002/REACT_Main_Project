@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Eye, MapPin, Clock } from 'lucide-react';
+import { Play, Eye, MapPin, Clock, Check, X } from 'lucide-react';
 import { VideoPreview } from './VideoPreview';
 
 interface DetectionData {
@@ -19,9 +19,10 @@ interface DetectionData {
 interface DetectionTableProps {
   data: DetectionData[];
   searchTerm: string;
+  onStatusUpdate: (id: number, newStatus: 'verified' | 'pending' | 'reviewed') => void;
 }
 
-export const DetectionTable = ({ data, searchTerm }: DetectionTableProps) => {
+export const DetectionTable = ({ data, searchTerm, onStatusUpdate }: DetectionTableProps) => {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   const filteredData = data.filter(
@@ -143,10 +144,31 @@ export const DetectionTable = ({ data, searchTerm }: DetectionTableProps) => {
                     </Button>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
-                      Review
-                    </Button>
+                    {detection.status === 'pending' ? (
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => onStatusUpdate(detection.id, 'verified')}
+                          className="h-8 px-2 text-success border-success/20 hover:bg-success/10"
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => onStatusUpdate(detection.id, 'reviewed')}
+                          className="h-8 px-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled>
+                        <Eye className="h-4 w-4 mr-1" />
+                        {detection.status === 'verified' ? 'Accepted' : 'Rejected'}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               );
